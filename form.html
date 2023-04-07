@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Upload Chunks</title>
+  </head>
+  <body>
+    <form>
+      <input type="file" id="fileInput" multiple>
+      <button type="button" onclick="uploadChunks()">Upload</button>
+    </form>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+      function uploadChunks() {
+        const fileInput = document.getElementById('fileInput');
+        const file = fileInput.files[0];
+        const fileName = file.name;
+        const fileSize = file.size;
+
+        const chunkSize = 1048576; // 1MB
+        const chunks = Math.ceil(fileSize / chunkSize);
+
+        let currentChunk = 0;
+        const uploadUrl = 'https://your-upload-api.com';
+
+        function uploadNextChunk() {
+          const start = currentChunk * chunkSize;
+          const end = Math.min(start + chunkSize, fileSize);
+
+          const formData = new FormData();
+          formData.append('file', file.slice(start, end));
+          formData.append('filename', fileName);
+          formData.append('totalChunks', chunks);
+          formData.append('currentChunk', currentChunk);
+
+          axios.post(uploadUrl, formData)
+            .then((response) => {
+              console.log(response);
+
+              currentChunk++;
+
+              if (currentChunk < chunks) {
+                uploadNextChunk();
+              } else {
+                // Nếu upload file thành công, reset file input bằng cách gán giá trị trống cho nó
+                fileInput.value = '';
+              }
+            })
+            .catch((error) => {
+              console.error(error);
+
+              // Nếu upload file thất bại, cũng reset file input bằng cách gán giá trị trống cho nó
+              fileInput.value = '';
+            });
+        }
+
+        uploadNextChunk();
+      }
+    </script>
+  </body>
+</html>
